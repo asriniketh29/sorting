@@ -46,6 +46,11 @@ def cmp_reverse(a, b):
     >>> cmp_reverse(322, 322)
     0
     '''
+    if a > b:
+        return -1
+    if b > a:
+        return 1
+    return 0
 
 
 def cmp_invert(cmp):
@@ -148,6 +153,25 @@ def cmp_nan_first(a, b):
     >>> cmp_nan_first(float('nan'), float('nan'))
     0
     '''
+    a_isnan = math.isnan(a)
+    b_isnan = math.isnan(b)
+
+    # Both are NaN
+    if a_isnan and b_isnan:
+        return 0
+    # Only 'a' is NaN -> comes first (-1)
+    if a_isnan:
+        return -1
+    # Only 'b' is NaN -> 'a' comes second (1)
+    if b_isnan:
+        return 1
+
+    # Neither is NaN -> standard comparison
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    return 0
 
 
 def _natural_chunks(s):
@@ -234,6 +258,25 @@ def _merged(xs, ys, cmp=cmp_standard, reverse=False):
     >>> _merged([1, 3, float('nan')], [2], cmp=cmp_nan_last)
     [1, 2, 3, nan]
     '''
+    result = []
+    i, j = 0, 0
+
+    while i < len(xs) and j < len(ys):
+        comparison = cmp(xs[i], ys[j])
+
+        # If reverse is True, invert the comparison logic
+        if (comparison <= 0 if not reverse else comparison >= 0):
+            result.append(xs[i])
+            i += 1
+        else:
+            result.append(ys[j])
+            j += 1
+
+    # Append remaining elements from either list
+    result.extend(xs[i:])
+    result.extend(ys[j:])
+
+    return result
 
 
 def merge_sorted(xs, cmp=cmp_standard, reverse=False):
@@ -261,14 +304,28 @@ def merge_sorted(xs, cmp=cmp_standard, reverse=False):
     >>> merge_sorted(['file10', 'file2', 'file1'], cmp=cmp_natural)
     ['file1', 'file2', 'file10']
     '''
+    if len(xs) <= 1:
+        return list(xs)
 
+    # Divide: split the list into two halves
+    mid = len(xs) // 2
+    left_half = xs[:mid]
+    right_half = xs[mid:]
 
+    # Conquer: recursively sort both halves
+    left_sorted = merge_sorted(left_half, cmp=cmp, reverse=reverse)
+    right_sorted = merge_sorted(right_half, cmp=cmp, reverse=reverse)
+
+    # Merge: combine the sorted halves using the helper function
+    return _merged(left_sorted, right_sorted, cmp=cmp, reverse=reverse)
+
+import random
 def quick_sorted(xs, cmp=cmp_standard, reverse=False):
     '''
     Quicksort is like mergesort,
     but it uses a different strategy to split the list.
     Instead of splitting the list down the middle,
-    a "pivot" value is randomly selected, 
+    a "pivot" value is randomly selected,
     and the list is split into a "less than" sublist and a "greater than" sublist.
 
     The pseudocode is:
@@ -295,7 +352,34 @@ def quick_sorted(xs, cmp=cmp_standard, reverse=False):
     >>> quick_sorted([float('nan'), 1, 5, 2, 3], cmp=cmp_nan_first)
     [nan, 1, 2, 3, 5]
     '''
+    if not xs:
+        return []
+    if len(xs) == 1:
+        return list(xs)
 
+    pivot = random.choice(xs)
+
+    less = []
+    equal = []
+    greater = []
+
+    for x in xs:
+        comparison = cmp(x, pivot)
+        if comparison < 0:
+            less.append(x)
+        elif comparison > 0:
+            greater.append(x)
+        else:
+            equal.append(x)
+
+    # Recursively sort sublists
+    sorted_less = quick_sorted(less, cmp=cmp, reverse=reverse)
+    sorted_greater = quick_sorted(greater, cmp=cmp, reverse=reverse)
+
+    # Place sublists in correct order depending on reverse
+    if reverse:
+        return sorted_greater + equal + sorted_less
+    return sorted_less + equal + sorted_greater
 
 def quick_sort(xs, cmp=cmp_standard, reverse=False):
     '''
@@ -328,3 +412,26 @@ def quick_sort(xs, cmp=cmp_standard, reverse=False):
     >>> xs
     ['file2', 'file10']
     '''
+    def partition(low, high):
+        pivot = xs[high]
+        i = low
+
+        for j in range(low, high):
+            comparison = cmp(xs[j], pivot)
+            # Decide whether xs[j] should come before pivot based on reverse
+            should_swap = (comparison <= 0) if not reverse else (comparison >= 0)
+
+            if should_swap:
+                xs[i], xs[j] = xs[j], xs[i]
+                i += 1
+
+        xs[i], xs[high] = xs[high], xs[i]
+        return i
+
+    def _quick_sort(low, high):
+        if low < high:
+            p = partition(low, high)
+            _quick_sort(low, p - 1)
+            _quick_sort(p + 1, high)
+
+    _quick_sort(0, len(xs) - 1)

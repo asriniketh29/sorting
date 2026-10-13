@@ -40,10 +40,26 @@ def merge_intervals(intervals):
     enough.  Whenever the next interval starts at or before the end of
     the last merged one, extend it; otherwise start a new interval.
     '''
-    def key(interval):
-        return interval[0]
+    if not intervals:
+        return []
 
+    # Sort intervals by their starting value
+    intervals.sort(key=lambda x: x[0])
 
+    merged = [intervals[0]]
+
+    for current in intervals[1:]:
+        last_merged = merged[-1]
+
+        # If current interval overlaps with the last merged interval
+        if current[0] <= last_merged[1]:
+            # Merge them by updating the end time to the max end time
+            last_merged[1] = max(last_merged[1], current[1])
+        else:
+            # No overlap, add as a new interval
+            merged.append(current)
+
+    return merged
 def rank_teams(votes):
     '''
     LeetCode 1366 -- Rank Teams by Votes
@@ -72,15 +88,28 @@ def rank_teams(votes):
     highest first, with the alphabet as the final tie-break.  Negating
     the counts turns the descending order into an ordinary sort key.
     '''
-    # counts[team][i] is the number of voters who ranked `team`
-    # in position i -- fill this in before sorting.
-    counts = {}
+    if not votes:
+        return ""
+
+    num_teams = len(votes[0])
+
+    # counts[team][i] is the number of voters who ranked 'team' in position i
+    counts = {team: [0] * num_teams for team in votes[0]}
+
+    # Populate the counts table
+    for vote in votes:
+        for i, team in enumerate(vote):
+            counts[team][i] += 1
 
     def key(team):
         # negated counts sort descending; the letter breaks ties
         return tuple(-n for n in counts[team]) + (team,)
 
+    # Sort the teams using the custom key function and join them into a single string
+    teams = sorted(votes[0], key=key)
+    return "".join(teams)
 
+from functools import cmp_to_key
 def largest_number(nums):
     '''
     LeetCode 179 -- Largest Number
@@ -108,6 +137,15 @@ def largest_number(nums):
             return -1
         return 1 if b + a > a + b else 0
 
+    # Convert integers to strings
+    strs = [str(num) for num in nums]
+
+    # Sort strings using cmp_to_key
+    strs.sort(key=cmp_to_key(cmp))
+
+    # Join strings and handle the all-zeros edge case
+    result = "".join(strs)
+    return "0" if result[0] == "0" else result
 
 def two_city_sched_cost(costs):
     '''
@@ -136,3 +174,16 @@ def two_city_sched_cost(costs):
     '''
     def key(cost):
         return cost[0] - cost[1]
+
+    # Sort costs using the key function (costA - costB)
+    costs.sort(key=key)
+
+    total = 0
+    n = len(costs) // 2
+
+    # First n people go to City A, remaining n go to City B
+    for i in range(n):
+        total += costs[i][0]       # Send to City A
+        total += costs[i + n][1]   # Send to City B
+
+    return total
