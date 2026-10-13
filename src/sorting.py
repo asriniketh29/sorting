@@ -17,6 +17,7 @@ equivalently, the result of every call to cmp is negated.
 import math
 import random
 
+
 def cmp_standard(a, b):
     '''
     used for sorting from lowest to highest
@@ -319,7 +320,7 @@ def merge_sorted(xs, cmp=cmp_standard, reverse=False):
     # Merge: combine the sorted halves using the helper function
     return _merged(left_sorted, right_sorted, cmp=cmp, reverse=reverse)
 
-import random
+
 def quick_sorted(xs, cmp=cmp_standard, reverse=False):
     '''
     Quicksort is like mergesort,
@@ -380,6 +381,7 @@ def quick_sorted(xs, cmp=cmp_standard, reverse=False):
     if reverse:
         return sorted_greater + equal + sorted_less
     return sorted_less + equal + sorted_greater
+
 
 def quick_sort(xs, cmp=cmp_standard, reverse=False):
     '''

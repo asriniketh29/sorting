@@ -17,6 +17,9 @@ without needing any hints.
 '''
 
 
+from functools import cmp_to_key
+
+
 def merge_intervals(intervals):
     '''
     LeetCode 56 -- Merge Intervals
@@ -60,6 +63,8 @@ def merge_intervals(intervals):
             merged.append(current)
 
     return merged
+
+
 def rank_teams(votes):
     '''
     LeetCode 1366 -- Rank Teams by Votes
@@ -109,7 +114,7 @@ def rank_teams(votes):
     teams = sorted(votes[0], key=key)
     return "".join(teams)
 
-from functools import cmp_to_key
+
 def largest_number(nums):
     '''
     LeetCode 179 -- Largest Number
@@ -146,6 +151,7 @@ def largest_number(nums):
     # Join strings and handle the all-zeros edge case
     result = "".join(strs)
     return "0" if result[0] == "0" else result
+
 
 def two_city_sched_cost(costs):
     '''
